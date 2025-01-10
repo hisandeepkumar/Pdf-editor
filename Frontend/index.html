@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Editor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin-top: 20px;
+      color: #333;
+    }
+
+    .upload-container {
+      margin: 20px 0;
+    }
+
+    input[type="file"] {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #preview-container {
+      border: 1px solid #ddd;
+      margin: 20px 0;
+      max-width: 90%;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    #download-btn {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      display: none;
+    }
+
+    #download-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF Editor</h1>
+  <div class="upload-container">
+    <input type="file" id="upload" accept="application/pdf">
+  </div>
+  <canvas id="preview-container"></canvas>
+  <button id="download-btn">Download Edited PDF</button>
+
+  <script>
+    const uploadInput = document.getElementById('upload');
+    const downloadBtn = document.getElementById('download-btn');
+
+    // Handle PDF Upload
+    uploadInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file && file.type === 'application/pdf') {
+        const formData = new FormData();
+        formData.append('pdf', file);
+
+        try {
+          // Send PDF to the backend
+          const response = await fetch('/edit-pdf', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (response.ok) {
+            // Receive the edited PDF from the backend
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+
+            // Display the download button
+            downloadBtn.style.display = 'block';
+
+            // Trigger download on button click
+            downloadBtn.addEventListener('click', () => {
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = 'edited.pdf';
+              link.click();
+              URL.revokeObjectURL(url);
+            });
+          } else {
+            alert('Failed to process the PDF.');
+          }
+        } catch (error) {
+          alert('Error connecting to the server.');
+          console.error(error);
+        }
+      } else {
+        alert('Please upload a valid PDF file.');
+      }
+    });
+  </script>
+</body>
+</html>
